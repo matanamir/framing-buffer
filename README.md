@@ -35,6 +35,8 @@ var options = {
         return offset_buffer.readUInt16BE();
     }
 };
+
+var framing_buffer = new FramingBuffer(options);
 ```
 
 Note that an [OffsetBuffer][1] is passed into the frame_length_reader function.

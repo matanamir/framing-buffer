@@ -1,0 +1,29 @@
+{
+    "name": "framing-buffer",
+    "version": "0.0.1",
+    "author": "Matan Amir <github-contrib@ematan.com> (http://www.n0tw0rthy.com)",
+    "description": "Easily frame your socket data in your own streams",
+    "main": "index.js",
+    "dependencies": {
+        "buffer-group": "*",
+        "offset-buffer": "*"
+    },
+    "devDependencies": {
+        "tap": "*"
+    },
+    "license": {
+        "type": "MIT",
+        "url": "https://github.com/matanamir/framing-buffer/raw/master/LICENSE"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git@github.com:matanamir/framing-buffer.git"
+    },
+    "scripts": {
+        "test": "node test/framing-buffer-test.js"
+    },
+    "keywords": [
+        "socket",
+        "framing"
+    ]
+}

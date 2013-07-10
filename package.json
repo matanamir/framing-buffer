@@ -1,6 +1,6 @@
 {
     "name": "framing-buffer",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "author": "Matan Amir <github-contrib@ematan.com> (http://www.n0tw0rthy.com)",
     "description": "Easily frame your socket data in your own streams",
     "main": "index.js",

@@ -39,14 +39,15 @@ module.exports = function(OffsetBuffer,
         /**
          * The length of the frame_length field in bytes.
          */
-        this.frame_length_size = (options && options.frame_length_size) || 4;
+        this.frame_length_size = (options && options.frame_length_size) ?
+            options.frame_length_size : 4;
 
         /**
          * The reader used to read the frame_length from the buffer.  It is
          * passed in an OffsetBuffer to read from.
          */
-        this.frame_length_reader = (options && options.frame_length_reader) ||
-            frame_length_reader;
+        this.frame_length_reader = (options && options.frame_length_reader) ?
+            options.frame_length_reader : frame_length_reader;
 
         /**
          * Keeps track of the expected length of the currently processed

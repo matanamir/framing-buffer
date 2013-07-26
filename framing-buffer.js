@@ -65,7 +65,7 @@ module.exports = function(OffsetBuffer,
          * Buffer of the current response data.  We'll need to do
          * our own framing of the stream to understand when one response
          * ends, and another begins. We'll buffer a response until a frame
-         * ends before resolving the promise from the write().
+         * ends before emitting a 'frame' event.
          */
         this.current_frame_buffer = new BufferGroup();
 
@@ -75,7 +75,7 @@ module.exports = function(OffsetBuffer,
 
     /**
      * Accepts data into the FramingBuffer. It uses a simple FSM to keep state for this data stream.
-     * Two or more full frames are pushed in the same data_buffer, multiple emit 'frame' events are
+     * If two or more full frames are pushed in the same data_buffer, multiple emit 'frame' events are
      * possible.
      */
     FramingBuffer.prototype.push = function(data_buffer) {
@@ -95,8 +95,8 @@ module.exports = function(OffsetBuffer,
                 frame_length = self.current_frame_length = 0;
                 // and tell our listeners about the full frame
                 self.emit('frame', full_frame);
-                // if there is any bytes left, try to read it's frame length
-                // so we can possibly read another full frame
+                // if there is any bytes left, try to read its frame length
+                // and see if we may possibly be able to read another full frame
                 parse();
             }
         }
@@ -109,7 +109,7 @@ module.exports = function(OffsetBuffer,
             //          whole frame, we can go ahead and emit
             //          the result, then reset the current_frame_length
             //          instead of waiting for another data event.
-            //      If there isn't enough data for the key, keep buffering
+            //      If there isn't enough data for the frame size, keep buffering
             //  If current_frame_length > 0 we're in the middle of a frame...
             //      If we have enough data to parse the frame?
             //          Do it, reset the state (current_frame_length,

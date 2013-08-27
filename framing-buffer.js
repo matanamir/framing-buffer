@@ -26,6 +26,12 @@ module.exports = function(OffsetBuffer,
                           logger) {
 
     /**
+     * The stats of the FSM to have.
+     */
+    var ST_PARSE   = 1, // Parsing incoming data.  No full frame found yet.
+        ST_EXTRACT = 2; //
+
+    /**
      * Ctor. The user can provide the following options (defaults shown):
      * {
      *      frame_length_size: 4;
@@ -73,8 +79,6 @@ module.exports = function(OffsetBuffer,
     }
     util.inherits(FramingBuffer, events.EventEmitter);
 
-    var ST_PARSE   = 1,
-        ST_EXTRACT = 2;
     /**
      * Accepts data into the FramingBuffer. It uses a simple FSM to keep state for this data stream.
      * If two or more full frames are pushed in the same data_buffer, multiple emit 'frame' events are
@@ -88,52 +92,44 @@ module.exports = function(OffsetBuffer,
         var frame_length = this.current_frame_length,
             frame_buffer = this.current_frame_buffer,
             frame_length_size = this.frame_length_size,
-            state = ST_PARSE;
+            state = ST_PARSE,
+            full_frame,
+            new_state;
 
         // First, buffer the data
         frame_buffer.push(data_buffer);
-
-        var full_frame, new_stat;
         while (state) {
             new_state = 0;
+            // ST_PARSE phase where we ingest data and try to figure out where the
+            // frame begins and ends.
             if (state === ST_PARSE) {
-                //  If current_frame_length === 0 we're expecting a new frame...
-                //      If have enough data in the buffer to get the frame size?
-                //          Extract it from the buffer so it only contains
-                //          the frame data.  If the data also includes the
-                //          whole frame, we can go ahead and emit
-                //          the result, then reset the current_frame_length
-                //          instead of waiting for another data event.
-                //      If there isn't enough data for the key, keep buffering
-                //  If current_frame_length > 0 we're in the middle of a frame...
-                //      If we have enough data to parse the frame?
-                //          Do it, reset the state (current_frame_length,
-                //          current_frame_buffer).  If there is any data left
-                //          over, start at the top...
                 if (frame_length  === 0) {
+                    // If we don't know the length of the next phase, first thing
+                    // is to buffer data until we have at least the data needed
+                    // to read the frame size.
                     if (frame_buffer.length >= frame_length_size) {
-                        // TODO: there are some performance improvements we can make here on the occasion
-                        // TODO: that the full frame length and full frame data is passed in at once.
                         frame_length = this.frame_length_reader(frame_buffer.extract(frame_length_size));
                         new_state = ST_EXTRACT;
                     }
                 } else {
+                    //  We have the length of the frame, so we can progress to
+                    //  extracting the frame from the buffer.
                     new_state = ST_EXTRACT;
                 }
             } else {
                 if (frame_buffer.length >= frame_length) {
-                    // we're in business!  We've got at least the data we need
+                    // We're in business!  We've got at least the data we need
                     // for a frame (any maybe more). Our BufferGroup will take
                     // care of the details of extracting just the bytes we need
                     // for this frame and keep the rest intact.
                     full_frame = frame_buffer.extract(frame_length);
                     // now we reset the frame state
                     frame_length = 0;
-                    // and tell our listeners about the full frame
+                    // and tell our listeners about the full frame.
                     this.emit('frame', full_frame);
                     full_frame = null;
-                    // if there is any bytes left, try to read it's frame length
-                    // so we can possibly read another full frame
+                    // If there is any bytes left, try to read another frame length
+                    // (and possibly) another full frame
                     new_state = ST_PARSE;
                 }
             }
